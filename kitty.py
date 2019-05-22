@@ -8,8 +8,12 @@ import sqlite3
 from EmbedGenerator import EmbedGenerator
 from QueryParser import QueryParser
 
-TOKEN = "NTc3OTYzNTEwMTE4NDgxOTIx.XNszAg.qF9uMnrZhqa0RNbsUuuPP2o8uPM"
-bot = commands.Bot(command_prefix='?', owner_id=305466955547017216)
+setting = open('./settings.txt', 'r')
+TOKEN = setting.readline().rstrip('\n')
+owner_id = setting.readline().rstrip('\n')
+setting.close()
+
+bot = commands.Bot(command_prefix='?', owner_id=owner_id)
 
 DB = sqlite3.connect('./data/PokemonShuffle.db')
 EG = EmbedGenerator()
