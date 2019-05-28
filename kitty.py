@@ -151,9 +151,9 @@ def get_query_ap(expected_query):
 	c = DB.cursor()
 	sqlite_query_str = f"SELECT lv{query_lv} FROM ap_table WHERE lv{current_lv}={current_ap}"
 
-	query_ap = c.execute(sqlite_query_str).fetchone()[0]
+	query_ap = c.execute(sqlite_query_str).fetchone()
 	if query_ap is not None:
-		return int(query_ap)
+		return int(query_ap[0])
 	else:
 		return None
 
@@ -174,7 +174,7 @@ async def queryap(ctx, *args):
 		if result is not None:
 			await ctx.send(
 				f"A Pokemon with {expected_query['ap']} AP at LV {expected_query['from']} will have **{result} AP** at LV {expected_query['to']}.")
-		else: await ctx.send('Expected arguments: from(=current level), ap(=current ap), to(=query level)')
+		else: await ctx.send('Please use correct values.')
 	else:
 		await ctx.send('Expected arguments: from(=current level), ap(=current ap), to(=query level)')
 
