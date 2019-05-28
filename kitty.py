@@ -1,7 +1,3 @@
-# bot id 577963510118481921
-# token NTc3OTYzNTEwMTE4NDgxOTIx.XNszAg.qF9uMnrZhqa0RNbsUuuPP2o8uPM
-# server id 577963058928812062
-
 import discord
 from discord.ext import commands
 import sqlite3
