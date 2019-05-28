@@ -89,7 +89,7 @@ async def skill(ctx, *, name):
 
 
 def get_query_result(valid_query):
-	sqlite_query_str = "SELECT Name FROM pokedex WHERE "
+	sqlite_query_str = "SELECT maxap, GROUP_CONCAT(name) FROM pokedex WHERE "
 	type_str, ap_str, maxap_str, skill_str, rml_str = None, None, None, None, None
 	for q in valid_query:
 		if q == 'type':
@@ -116,17 +116,17 @@ def get_query_result(valid_query):
 
 	sqlite_query_str += condition_str
 	# always order by MaxAP for now
-	sqlite_query_str += " ORDER BY MaxAP DESC"
+	sqlite_query_str += " GROUP BY maxap ORDER BY maxap DESC"
 	c = DB.cursor()
 	query_result = c.execute(sqlite_query_str).fetchall()
 
-	if query_result is not None:
-		output_result = []
-		for r in query_result:
-			output_result.append(r[0])
-		return ', '.join(output_result)
-	else:
+	if len(query_result) == 0:
 		return 'No matches were found.'
+	else:
+		output_result = ['MaxAP | Pokemon']
+		for r in query_result:
+			output_result.append(f"{r[0]}: {r[1]}")
+		return '\n'.join(output_result)
 
 @bot.command()
 async def query(ctx, *args):
@@ -143,8 +143,43 @@ async def query(ctx, *args):
 
 	if len(valid_query) > 0:
 		result = get_query_result(valid_query)
-		await ctx.send(f'**Result**: {result}')
+		await ctx.send(f'Querying {valid_query}...')
+		await ctx.send(result)
 	else:
-		await ctx.send('Please use supported keywords (type, ap, maxap, skill, rml or rmls)')	
+		await ctx.send('Please use supported keywords (type, ap, maxap, skill, rml or rmls)')
+
+def get_query_ap(expected_query):
+	current_lv = expected_query['from']
+	current_ap = expected_query['ap']
+	query_lv = expected_query['to']
+	c = DB.cursor()
+	sqlite_query_str = f"SELECT lv{query_lv} FROM ap_table WHERE lv{current_lv}={current_ap}"
+
+	query_ap = c.execute(sqlite_query_str).fetchone()[0]
+	if query_ap is not None:
+		return int(query_ap)
+	else:
+		return None
+
+@bot.command()
+async def queryap(ctx, *args):
+	expected_query = {'from': None,
+					'ap': None,
+					'to': None}
+	temp = {}
+	for arg in args:
+		temp[arg.split('=')[0].lower()] = arg.split('=')[1]
+
+	if temp.keys() == expected_query.keys():
+		expected_query['from'] = QP.parse_number(temp['from'])
+		expected_query['ap'] = QP.parse_number(temp['ap'])
+		expected_query['to'] = QP.parse_number(temp['to'])
+		result = get_query_ap(expected_query)
+		if result is not None:
+			await ctx.send(
+				f"A Pokemon with {expected_query['ap']} AP at LV {expected_query['from']} will have **{result} AP** at LV {expected_query['to']}.")
+		else: await ctx.send('Expected arguments: from(=current level), ap(=current ap), to(=query level)')
+	else:
+		await ctx.send('Expected arguments: from(=current level), ap(=current ap), to(=query level)')
 
 bot.run(TOKEN)
